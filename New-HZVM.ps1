@@ -71,6 +71,6 @@ Set-VMVideo -VMName $VMName -HorizontalResolution $HorizontalResolution -Vertica
 #$SnapshotName = "Initial"
 #Checkpoint-VM -Name $Name -SnapshotName $SnapshotName
 
-#Start-VM -Name $Name
-
 #VMConnect.exe localhost $VMName
+
+#Start-VM -Name $Name
