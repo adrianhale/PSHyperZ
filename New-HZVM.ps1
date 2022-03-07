@@ -18,8 +18,11 @@ function New-HZVM {
 
     [CmdletBinding()]
     param (
+        [Parameter(Mandatory)]
         #New-VM
-        [string]$Name                            = "Test",
+        [string]$Name,
+
+        [Parameter(Mandatory=$false)]
         [boolean]$NoVHD                          = $true,
         [string]$SwitchName                      = "External Virtual Switch",
         [string]$Path                            = "D:\Hyper-Z",
@@ -27,7 +30,6 @@ function New-HZVM {
         [int16]$Generation                       = 2,
 
         #Set-VMProcessor
-        [string]$VMName                          = "Test",
         [int64]$Count                            = 4,
         [boolean]$ExposeVirtualizationExtensions = $true,
 
@@ -52,7 +54,7 @@ function New-HZVM {
         #Enable-VMTPM
 
         #Enable-VMIntegrationService
-        [string]$EnableVMIntegrationServiceName  = "Guest Service Interface",
+        [string[]]$EnableVMIntegrationServiceName,
 
         #Disable-VMIntegrationService
         [string]$DisableVMIntegrationServiceName = "Time Synchronization",
@@ -64,7 +66,7 @@ function New-HZVM {
         [string]$AutomaticStartAction            = "Nothing",
         [string]$AutomaticStopAction             = "Shutdown",
         [boolean]$AutomaticCheckpointsEnabled    = $false,
-        [string]$SnapshotFileLocation            = "$Path\$VMName\Checkpoints",
+        [string]$SnapshotFileLocation            = "$Path\$Name\Checkpoints",
         [string]$CheckpointType                  = "Production",
 
         #Set-VMVideo
@@ -73,12 +75,14 @@ function New-HZVM {
     )
     
     begin {
-
+        Write-Host "Begin"
     }
 
     process {
-        foreach ($VM in $VMName) {
+        foreach ($VM in $Name) {
             try {
+                Write-Host "Process"
+
                 $NewVM = @{
                     Name       = $Name
                     NoVHD      = $NoVHD
@@ -90,7 +94,7 @@ function New-HZVM {
                 New-VM @NewVM
 
                 $SetVMProcessor = @{
-                    VMName                         = $VMName
+                    VMName                         = $Name
                     Count                          = $Count
                     ExposeVirtualizationExtensions = $ExposeVirtualizationExtensions
                 }
@@ -104,29 +108,29 @@ function New-HZVM {
                 New-VHD @NewVHD
                 
                 $AddVMHardDiskDrive = @{
-                    VMName = $VMName
+                    VMName = $Name
                     Path   = "$Path\$Name\$Name.vhdx"
                 }
                 Add-VMHardDiskDrive @AddVMHardDiskDrive
 
                 $AddVMDvdDrive = @{
-                    VMName = $VMName
+                    VMName = $Name
                     Path   = $ISOPath
                 }
                 Add-VMDvdDrive @AddVMDvdDrive
                 
                 $SetVMNetworkAdapterVlan = @{
-                    VMName = $VMName
+                    VMName = $Name
                     Access = $Access
                     VlanId = $VlanId
                 }
                 Set-VMNetworkAdapterVlan @SetVMNetworkAdapterVlan
                 
-                $vmDVDDrive       = Get-VMDvdDrive -VMName $VMName
-                $vmNetworkAdapter = Get-VMNetworkAdapter -VMName $VMName
-                $vmHardDiskDrive  = Get-VMHardDiskDrive -VMName $VMName
+                $vmDVDDrive       = Get-VMDvdDrive -VMName $Name
+                $vmNetworkAdapter = Get-VMNetworkAdapter -VMName $Name
+                $vmHardDiskDrive  = Get-VMHardDiskDrive -VMName $Name
                 $SetVMFirmware = @{
-                    VMName              = $VMName
+                    VMName              = $Name
                     BootOrder           = $vmDVDDrive, $vmNetworkAdapter, $vmHardDiskDrive
                     EnableSecureBoot    = $EnableSecureBoot
                     SecureBootTemplate  = $SecureBootTemplate
@@ -134,25 +138,25 @@ function New-HZVM {
                 Set-VMFirmware @SetVMFirmware
                 
                 $SetVMKeyProtector = @{
-                    VMName               = $VMName
+                    VMName               = $Name
                     NewLocalKeyProtector = $NewLocalKeyProtector
                 }
                 Set-VMKeyProtector @SetVMKeyProtector
                 
                 $EnableVMTPM = @{
-                    VMName = $VMName
+                    VMName = $Name
                 }
                 Enable-VMTPM @EnableVMTPM
                 
                 $EnableVMIntegrationService = @{
-                   Name   = $EnableVMIntegrationServiceName
-                   VMName = $VMName
+                   Name   = "Guest Service Interface", "Heartbeat", "Key-Value Pair Exchange", "Shutdown", "VSS"
+                   VMName = $Name
                 }
                 Enable-VMIntegrationService @EnableVMIntegrationService
                 
                 $DisableVMIntegrationService = @{
                     Name   = $DisableVMIntegrationServiceName
-                    VMName = $VMName
+                    VMName = $Name
                 }
                 Disable-VMIntegrationService @DisableVMIntegrationService
                 
@@ -171,25 +175,26 @@ function New-HZVM {
                 Set-VM @SetVM
                 
                 $SetVMVideo = @{
-                    VMName               = $VMName
+                    VMName               = $Name
                     HorizontalResolution = $HorizontalResolution
                     VerticalResolution   = $VerticalResolution
                 }
                 Set-VMVideo @SetVMVideo
             }
             catch {
+                Write-Host "Catch"
                 Write-Host "An error occurred:"
                 Write-Host $_
                 Write-Error -ErrorRecord $_ 
             }
             finally {
-                Write-Host "Success"
+                Write-Host "Finally"
             }
         }
     }
 
     end {
-        Write-Host "Completed"
+        Write-Host "End"
     }
 }
 
