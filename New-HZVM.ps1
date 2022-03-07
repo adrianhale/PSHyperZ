@@ -1,8 +1,10 @@
-<#
+function New-HZVM {
+
+    <#
 .SYNOPSIS
-    Short description
+    Creates a new virtual machine.
 .DESCRIPTION
-    Long description
+    Creates a new virtual machine by booting from attached ISO. Recommended for creating a new golden image.
 .EXAMPLE
     PS C:\> <example usage>
     Explanation of what the example does
@@ -14,63 +16,181 @@
     General notes
 #>
 
-$Name = $VMName = "Test"
-$MemoryStartupBytes = 512MB
-$SwitchName = "External Virtual Switch"
-$Path = "D:\Hyper-Z"
-$Version = "10.0"
-$Generation = 2
-New-VM -Name $Name -MemoryStartupBytes $MemoryStartupBytes -NoVHD -SwitchName $SwitchName -Path $Path -Version $Version -Generation $Generation
+    [CmdletBinding()]
+    param (
+        #New-VM
+        [string]$Name                            = "Test",
+        [boolean]$NoVHD                          = $true,
+        [string]$SwitchName                      = "External Virtual Switch",
+        [string]$Path                            = "D:\Hyper-Z",
+        [version]$Version                        = "10.0",
+        [int16]$Generation                       = 2,
 
-$Count = 4
-$ExposeVirtualizationExtensions = $true
-Set-VMProcessor -VMName $VMName -Count $Count -ExposeVirtualizationExtensions $ExposeVirtualizationExtensions
+        #Set-VMProcessor
+        [string]$VMName                          = "Test",
+        [int64]$Count                            = 4,
+        [boolean]$ExposeVirtualizationExtensions = $true,
 
-$SizeBytes = 512GB
-New-VHD -Path $Path\$Name\$Name.vhdx -SizeBytes $SizeBytes -Dynamic
+        #New-VHD
+        [uint64]$SizeBytes                       = 512GB,
+        [boolean]$Dynamic                        = $true,
 
-Add-VMHardDiskDrive -VMName $VMName -Path $Path\$Name\$Name.vhdx
+        #Add-VMDvdDrive
+        [string]$ISOPath                         = "D:\ISOs\windows_server_2012_r2_evaluation.iso",
 
-$ISOPath = "C:\Users\AdrianHale\OneDrive - Breache\Documents\ISOs\windows_10_evaluation.iso"
-Add-VMDvdDrive -VMName $VMName -Path $ISOPath
+        #Set-VMNetworkAdapterVlan
+        [boolean]$Access                         = $true,
+        [int32]$VlanId                           = 4094,
 
-$VlanId = 4094
-Set-VMNetworkAdapterVlan -VMName $VMName -Access -VlanId $VlanId
+        #Set-VMFirmware
+        [string]$EnableSecureBoot                = "On",
+        [string]$SecureBootTemplate              = "MicrosoftWindows",
 
-$vmDVDDrive = Get-VMDvdDrive -VMName $VMName
-$vmVMNetworkAdapter = Get-VMNetworkAdapter -VMName $VMName
-$vmHardDiskDrive = Get-VMHardDiskDrive -VMName $VMName
-$EnableSecureBoot = "On"
-$SecureBootTemplate = "MicrosoftWindows"
-Set-VMFirmware -VMName $VMName -BootOrder $vmDVDDrive, $vmVMNetworkAdapter, $vmHardDiskDrive -EnableSecureBoot $EnableSecureBoot -SecureBootTemplate $SecureBootTemplate
+        #Set-VMKeyProtector
+        [boolean]$NewLocalKeyProtector           = $true,
 
-Set-VMKeyProtector -VMName $VMName -NewLocalKeyProtector
+        #Enable-VMTPM
 
-Enable-VMTPM -VMName $VMName
+        #Enable-VMIntegrationService
+        [string]$EnableVMIntegrationServiceName  = "Guest Service Interface",
 
-$EnableVMIntegrationService = "Guest Service Interface","Heartbeat","Key-Value Pair Exchange","Shutdown","VSS"
-Enable-VMIntegrationService -Name $EnableVMIntegrationService -VMName $VMName
+        #Disable-VMIntegrationService
+        [string]$DisableVMIntegrationServiceName = "Time Synchronization",
 
-$DisableVMIntegrationService = "Time Synchronization"
-Disable-VMIntegrationService -Name $DisableVMIntegrationService -VMName $VMName
+        #Set-VM
+        [int64]$MemoryMinimumBytes               = 512MB,
+        [int64]$MemoryMaximumBytes               = 8GB,
+        [int64]$MemoryStartupBytes               = 4GB,
+        [string]$AutomaticStartAction            = "Nothing",
+        [string]$AutomaticStopAction             = "Shutdown",
+        [boolean]$AutomaticCheckpointsEnabled    = $false,
+        [string]$SnapshotFileLocation            = "$Path\$VMName\Checkpoints",
+        [string]$CheckpointType                  = "Production",
 
-$MemoryMinimumBytes = 512MB
-$MemoryMaximumBytes = 8GB
-$MemoryStartupBytes = 2GB
-$AutomaticStartAction = "Nothing"
-$AutomaticStopAction = "Shutdown"
-$AutomaticCheckpointsEnabled = $false
-$SnapshotFileLocation = "$Path\$VMName\Checkpoints"
-$CheckpointType = "Production"
-Set-VM -Name $Name -DynamicMemory -MemoryMinimumBytes $MemoryMinimumBytes -MemoryMaximumBytes $MemoryMaximumBytes -MemoryStartupBytes $MemoryStartupBytes -AutomaticStartAction $AutomaticStartAction -AutomaticStopAction $AutomaticStopAction -AutomaticCheckpointsEnabled $AutomaticCheckpointsEnabled -SnapshotFileLocation $SnapshotFileLocation -CheckpointType $CheckpointType
+        #Set-VMVideo
+        [uint16]$HorizontalResolution            = 1920,
+        [uint16]$VerticalResolution              = 1080
+    )
+    
+    begin {
 
-$HorizontalResolution = 1920
-$VerticalResolution = 1080
-Set-VMVideo -VMName $VMName -HorizontalResolution $HorizontalResolution -VerticalResolution $VerticalResolution
+    }
 
-#$SnapshotName = "Initial"
-#Checkpoint-VM -Name $Name -SnapshotName $SnapshotName
+    process {
+        foreach ($VM in $VMName) {
+            try {
+                $NewVM = @{
+                    Name       = $Name
+                    NoVHD      = $NoVHD
+                    SwitchName = $SwitchName
+                    Path       = $Path
+                    Version    = $Version
+                    Generation = $Generation
+                }
+                New-VM @NewVM
 
-#VMConnect.exe localhost $VMName
+                $SetVMProcessor = @{
+                    VMName                         = $VMName
+                    Count                          = $Count
+                    ExposeVirtualizationExtensions = $ExposeVirtualizationExtensions
+                }
+                Set-VMProcessor @SetVMProcessor
 
-#Start-VM -Name $Name
+                $NewVHD = @{
+                    Path      = "$Path\$Name\$Name.vhdx"
+                    SizeBytes = $SizeBytes
+                    Dynamic   = $Dynamic
+                }
+                New-VHD @NewVHD
+                
+                $AddVMHardDiskDrive = @{
+                    VMName = $VMName
+                    Path   = "$Path\$Name\$Name.vhdx"
+                }
+                Add-VMHardDiskDrive @AddVMHardDiskDrive
+
+                $AddVMDvdDrive = @{
+                    VMName = $VMName
+                    Path   = $ISOPath
+                }
+                Add-VMDvdDrive @AddVMDvdDrive
+                
+                $SetVMNetworkAdapterVlan = @{
+                    VMName = $VMName
+                    Access = $Access
+                    VlanId = $VlanId
+                }
+                Set-VMNetworkAdapterVlan @SetVMNetworkAdapterVlan
+                
+                $vmDVDDrive       = Get-VMDvdDrive -VMName $VMName
+                $vmNetworkAdapter = Get-VMNetworkAdapter -VMName $VMName
+                $vmHardDiskDrive  = Get-VMHardDiskDrive -VMName $VMName
+                $SetVMFirmware = @{
+                    VMName              = $VMName
+                    BootOrder           = $vmDVDDrive, $vmNetworkAdapter, $vmHardDiskDrive
+                    EnableSecureBoot    = $EnableSecureBoot
+                    SecureBootTemplate  = $SecureBootTemplate
+                }
+                Set-VMFirmware @SetVMFirmware
+                
+                $SetVMKeyProtector = @{
+                    VMName               = $VMName
+                    NewLocalKeyProtector = $NewLocalKeyProtector
+                }
+                Set-VMKeyProtector @SetVMKeyProtector
+                
+                $EnableVMTPM = @{
+                    VMName = $VMName
+                }
+                Enable-VMTPM @EnableVMTPM
+                
+                $EnableVMIntegrationService = @{
+                   Name   = $EnableVMIntegrationServiceName
+                   VMName = $VMName
+                }
+                Enable-VMIntegrationService @EnableVMIntegrationService
+                
+                $DisableVMIntegrationService = @{
+                    Name   = $DisableVMIntegrationServiceName
+                    VMName = $VMName
+                }
+                Disable-VMIntegrationService @DisableVMIntegrationService
+                
+                $SetVM = @{
+                    Name                        = $Name
+                    DynamicMemory               = $DynamicMemory
+                    MemoryMinimumBytes          = $MemoryMinimumBytes
+                    MemoryMaximumBytes          = $MemoryMaximumBytes
+                    MemoryStartupBytes          = $MemoryStartupBytes
+                    AutomaticStartAction        = $AutomaticStartAction
+                    AutomaticStopAction         = $AutomaticStopAction
+                    AutomaticCheckpointsEnabled = $AutomaticCheckpointsEnabled
+                    SnapshotFileLocation        = $SnapshotFileLocation
+                    CheckpointType              = $CheckpointType
+                }
+                Set-VM @SetVM
+                
+                $SetVMVideo = @{
+                    VMName               = $VMName
+                    HorizontalResolution = $HorizontalResolution
+                    VerticalResolution   = $VerticalResolution
+                }
+                Set-VMVideo @SetVMVideo
+            }
+            catch {
+                Write-Host "An error occurred:"
+                Write-Host $_
+                Write-Error -ErrorRecord $_ 
+            }
+            finally {
+                Write-Host "Success"
+            }
+        }
+    }
+
+    end {
+        Write-Host "Completed"
+    }
+}
+
+New-HZVM
