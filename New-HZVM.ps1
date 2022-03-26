@@ -38,7 +38,7 @@ function New-HZVM {
         [boolean]$Dynamic                        = $true,
 
         #Add-VMDvdDrive
-        [string]$ISOPath                         = "D:\ISOs\windows_server_2012_r2_evaluation.iso",
+        [string]$ISOPath                         = "D:\ISOs\windows_server_2022_evaluation.iso",
 
         #Set-VMNetworkAdapterVlan
         [boolean]$Access                         = $true,
@@ -198,4 +198,4 @@ function New-HZVM {
     }
 }
 
-New-HZVM
+New-HZVM -Name 
