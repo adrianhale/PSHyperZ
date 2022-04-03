@@ -1,10 +1,10 @@
-function New-HZVM {
+function New-HZChild {
 
-    <#
+<#
 .SYNOPSIS
-    Creates a new virtual machine.
+    Creates a child virtual machine
 .DESCRIPTION
-    Creates a new virtual machine by booting from attached ISO. Recommended for creating a new golden image.
+    Long description
 .EXAMPLE
     PS C:\> <example usage>
     Explanation of what the example does
@@ -23,6 +23,7 @@ function New-HZVM {
         [string]$Name,
 
         [Parameter(Mandatory=$false)]
+        #New-VM
         [boolean]$NoVHD                          = $true,
         [string]$SwitchName                      = "External Virtual Switch",
         [string]$Path                            = "D:\Hyper-Z",
@@ -33,12 +34,12 @@ function New-HZVM {
         [int64]$Count                            = 4,
         [boolean]$ExposeVirtualizationExtensions = $true,
 
-        #New-VHD
-        [uint64]$SizeBytes                       = 512GB,
-        [boolean]$Dynamic                        = $true,
-
-        #Add-VMDvdDrive
-        [string]$ISOPath                         = "D:\ISOs\windows_server_2022_evaluation.iso",
+        #Copy-Item
+        #[string]$ParentVHD                       = "D:\VHDs\windows_10_21h2_eval.vhdx",
+        #[string]$ParentVHD                       = "D:\VHDs\windows_11_eval.vhdx",
+        #[string]$ParentVHD                       = "D:\VHDs\windows_server_2019_eval.vhdx",
+        [string]$ParentVHD                       = "D:\VHDs\windows_server_2022_core_eval.vhdx",
+        #[string]$ParentVHD                       = "D:\VHDs\windows_server_2022_eval.vhdx",
 
         #Set-VMNetworkAdapterVlan
         [boolean]$Access                         = $true,
@@ -60,9 +61,9 @@ function New-HZVM {
         [string]$DisableVMIntegrationServiceName = "Time Synchronization",
 
         #Set-VM
-        [int64]$MemoryMinimumBytes               = 512MB,
+        [int64]$MemoryMinimumBytes               = 128MB,
         [int64]$MemoryMaximumBytes               = 8GB,
-        [int64]$MemoryStartupBytes               = 4GB,
+        [int64]$MemoryStartupBytes               = 2GB,
         [string]$AutomaticStartAction            = "Nothing",
         [string]$AutomaticStopAction             = "Shutdown",
         [boolean]$AutomaticCheckpointsEnabled    = $false,
@@ -71,17 +72,19 @@ function New-HZVM {
 
         #Set-VMVideo
         [uint16]$HorizontalResolution            = 1920,
-        [uint16]$VerticalResolution              = 1080
+        [uint16]$VerticalResolution              = 1080  
     )
     
     begin {
-        Write-Host "Begin"
+        Write-Host 'Begin'
     }
-
+    
     process {
         foreach ($VM in $Name) {
             try {
-                Write-Host "Process"
+                Write-Host 'Process - Try'
+
+
 
                 $NewVM = @{
                     Name       = $Name
@@ -93,31 +96,24 @@ function New-HZVM {
                 }
                 New-VM @NewVM
 
+                $CopyItem = @{
+                    Path = $ParentVHD
+                    Destination = "$Path\$Name\$Name.vhdx"
+                }
+                Copy-Item @CopyItem
+
+                $AddVMHardDiskDrive = @{
+                    VMName = $Name
+                    Path = "$Path\$Name\$Name.vhdx"
+                }
+                Add-VMHardDiskDrive @AddVMHardDiskDrive
+
                 $SetVMProcessor = @{
                     VMName                         = $Name
                     Count                          = $Count
                     ExposeVirtualizationExtensions = $ExposeVirtualizationExtensions
                 }
                 Set-VMProcessor @SetVMProcessor
-
-                $NewVHD = @{
-                    Path      = "$Path\$Name\$Name.vhdx"
-                    SizeBytes = $SizeBytes
-                    Dynamic   = $Dynamic
-                }
-                New-VHD @NewVHD
-                
-                $AddVMHardDiskDrive = @{
-                    VMName = $Name
-                    Path   = "$Path\$Name\$Name.vhdx"
-                }
-                Add-VMHardDiskDrive @AddVMHardDiskDrive
-
-                $AddVMDvdDrive = @{
-                    VMName = $Name
-                    Path   = $ISOPath
-                }
-                Add-VMDvdDrive @AddVMDvdDrive
                 
                 $SetVMNetworkAdapterVlan = @{
                     VMName = $Name
@@ -126,12 +122,12 @@ function New-HZVM {
                 }
                 Set-VMNetworkAdapterVlan @SetVMNetworkAdapterVlan
                 
-                $vmDVDDrive       = Get-VMDvdDrive -VMName $Name
+                #$vmDVDDrive       = Get-VMDvdDrive -VMName $Name
                 $vmNetworkAdapter = Get-VMNetworkAdapter -VMName $Name
                 $vmHardDiskDrive  = Get-VMHardDiskDrive -VMName $Name
                 $SetVMFirmware = @{
                     VMName              = $Name
-                    BootOrder           = $vmDVDDrive, $vmNetworkAdapter, $vmHardDiskDrive
+                    BootOrder           = $vmNetworkAdapter, $vmHardDiskDrive
                     EnableSecureBoot    = $EnableSecureBoot
                     SecureBootTemplate  = $SecureBootTemplate
                 }
@@ -182,20 +178,20 @@ function New-HZVM {
                 Set-VMVideo @SetVMVideo
             }
             catch {
-                Write-Host "Catch"
+                Write-Host 'Process - Catch'
                 Write-Host "An error occurred:"
                 Write-Host $_
                 Write-Error -ErrorRecord $_ 
             }
             finally {
-                Write-Host "Finally"
+                Write-Host 'Process - Finally'
             }
         }
     }
-
+    
     end {
-        Write-Host "End"
+        Write-Host 'End'
     }
 }
 
-New-HZVM -Name 
+New-HZChild
