@@ -23,6 +23,7 @@ function New-HZParent {
         [string]$Name,
 
         [Parameter(Mandatory=$false)]
+        #New-VM
         [boolean]$NoVHD                          = $true,
         [string]$SwitchName                      = "External Virtual Switch",
         [string]$Path                            = "D:\Hyper-Z",
@@ -38,10 +39,11 @@ function New-HZParent {
         [boolean]$Dynamic                        = $true,
 
         #Add-VMDvdDrive
+        [string]$ISOPath                         = "D:\ISOs\windows_10_21h2.iso",
         #[string]$ISOPath                         = "D:\ISOs\windows_10_21h2_eval.iso",
         #[string]$ISOPath                         = "D:\ISOs\windows_11_eval.iso",
         #[string]$ISOPath                         = "D:\ISOs\windows_server_2019_eval.iso",
-        [string]$ISOPath                         = "D:\ISOs\windows_server_2022_eval.iso",
+        #[string]$ISOPath                         = "D:\ISOs\windows_server_2022_eval.iso",
 
         #Set-VMNetworkAdapterVlan
         [boolean]$Access                         = $true,
