@@ -1,4 +1,4 @@
-function Verb-Noun {
+function Destroy-VM {
 
 <#
 .SYNOPSIS
@@ -33,3 +33,5 @@ function Verb-Noun {
         
     }
 }
+
+Destroy-VM

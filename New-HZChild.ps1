@@ -35,16 +35,16 @@ function New-HZChild {
         [boolean]$ExposeVirtualizationExtensions = $true,
 
         #Copy-Item
-        [string]$ParentVHD                       = "D:\VHDs\windows_10_21h2.vhdx",
+        #[string]$ParentVHD                       = "D:\VHDs\windows_10_21h2.vhdx",
         #[string]$ParentVHD                       = "D:\VHDs\windows_10_21h2_eval.vhdx",
         #[string]$ParentVHD                       = "D:\VHDs\windows_11_eval.vhdx",
         #[string]$ParentVHD                       = "D:\VHDs\windows_server_2019_eval.vhdx",
-        #[string]$ParentVHD                       = "D:\VHDs\windows_server_2022_core_eval.vhdx",
+        [string]$ParentVHD                       = "D:\VHDs\windows_server_2022_core_eval.vhdx",
         #[string]$ParentVHD                       = "D:\VHDs\windows_server_2022_eval.vhdx",
 
         #Set-VMNetworkAdapterVlan
         [boolean]$Access                         = $true,
-        [int32]$VlanId                           = 4094,
+        [int32]$VlanId                           = 2471,
 
         #Set-VMFirmware
         [string]$EnableSecureBoot                = "On",
